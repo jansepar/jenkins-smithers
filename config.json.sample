@@ -1,0 +1,24 @@
+{
+    // Your token for github. Setup post commit hook to /YOUR_TOKEN
+    "token":       "ASDF1234"
+    ,"hudsonurl": "http://jenkins.yoursite.com"
+
+    // An array of different projects to setup for automatic branch creation
+    ,"projects": [
+        {
+            // name of the project on Github
+            "name": "reponame"
+            // The job that we will copy configuration from for this project. If the job has the name
+            // "master", it will replace "master" with the branch name for the new job, otherwise, it will 
+            // simply append the branch name to the base job
+            ,"baseJob": "reponame-master"
+        }
+        ,{
+            
+        }
+
+
+    ]
+
+
+}

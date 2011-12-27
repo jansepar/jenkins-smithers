@@ -1,0 +1,11 @@
+{
+    "name": "smithers",
+    "description": "A middleman between Github post commit hooks, and Jenkins",
+    "author": "Shawn Jansepar <shawnjan@gmail.com>",
+    "version": "0.0.1",
+    "main": "./smithers.js"
+    "repository": {
+        "type": "git",
+        "url": "git@github.com:jansepar/jenkins-smithers.git"
+    },
+}
