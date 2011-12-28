@@ -11,7 +11,7 @@ var serverHandler = function(request, response, opts, jenkins) {
     
     if(!validToken) {
         response.statusCode = 404;
-        response.end("Invalid token/Token not found");
+        response.end("Invalid token/Token not found. Your humble servant, Smithers.");
         return;
     }
 
@@ -45,12 +45,92 @@ var serverHandler = function(request, response, opts, jenkins) {
             }
             if(projectConfig === undefined) {
                 response.statusCode = 404;
-                response.end("Project not found in configuration");
+                response.end("Project not found in configuration. Your humble servant, Smithers.");
                 return;
             }
         }
 
+        // Find branch and check if that branch has a corresponding job
+        var branchResult = payload.ref.match(/refs\/heads\/(\w+)/);
+        var branch = (branchResult != null) ? branchResult[1] : undefined; 
+        if (!branch) {
+                response.statusCode = 404;
+                response.end("I'm sorry, there was a problem with finding the branch. Your humble servant, Smithers.");
+                return;
+        }
 
+        // Determine name of job from branch and project name
+        var baseJob = projectConfig.baseJob;
+        //var baseJob = "test";
+        if (/master/.test(baseJob)) {
+            var jobName = baseJob.replace(/master/, branch);
+        } else {
+            var jobName = baseJob + '-' + branch;
+        }
+        console.log(jobName);
+
+        // Check if branch has a job in Jenkins
+        jenkins.job_info(jobName, function(error, data) {
+            // if getting the job info returns an error, the job does not exist, so we
+            // will copy the job from the base job
+            if(error) {
+               jenkins.copy_job(baseJob
+                               ,jobName
+                               ,function(configFile) {
+                                    // function that takes in the config file, and sets the new jobs
+                                    // config file to whatever is returned here.
+                                    return configFile.replace(baseJob, jobName);
+                               }
+                               ,function(error, data) {
+                                    if(!error) {
+                                        response.write("Job copied\n");
+                                    } else {
+                                        response.statusCode = 500;
+                                        response.end("Error copying job, ", error);
+                                        return;
+                                    }
+
+                                    jenkins.build(jobName, function(error, data) {
+                                        if(!error) {
+                                            response.end("Job built\n");
+                                            return;
+                                        } else {
+                                            response.statusCode = 500;
+                                            response.end("Error building, ", error);
+                                            return;
+                                        }
+                                    });
+                                });
+            } else {
+                if (projectConfig.deleted == true) {
+                    jenkins.delete_job(jobName, function(error, data) {
+                        if(!error) {
+                            response.end("Job deleted\n");
+                            return;
+                        } else {
+                            response.statusCode = 500;
+                            response.end("Error deleting, ", error);
+                            return;
+                        }
+                        
+                    });
+                } else {
+                    jenkins.build(jobName, function(error, data) {
+                        if(!error) {
+                            response.end("Job built\n");
+                            console.log("Job build");
+                            return;
+                        } else {
+                            response.statusCode = 500;
+                            response.end("Error building, ", error);
+                            return;
+                        }
+                    });
+
+                }
+
+            }
+        });
 
         response.end();
 
