@@ -11,15 +11,16 @@ var serverHandler = function(request, response, opts, jenkins) {
     
     if(!validToken) {
         response.statusCode = 404;
-        response.end("Invalid token/Token not found. Your humble servant, Smithers.");
+        console.error("Invalid token/Token not found. Your humble servant, Smithers.");
         return;
     }
 
+    // Recieve body from post commit hook
     var body = "";
-
     request.on('data', function(chunk) {
         body += chunk;
     });
+
 
     request.on('end', function() {
 
@@ -40,12 +41,11 @@ var serverHandler = function(request, response, opts, jenkins) {
             for (project in projects) {
                 if (projects[project].name == payload.repository.name) {
                     projectConfig = projects[project];
-                    console.log(projectConfig);
                 }
             }
             if(projectConfig === undefined) {
                 response.statusCode = 404;
-                response.end("Project not found in configuration. Your humble servant, Smithers.");
+                console.error("Project not found in configuration. Your humble servant, Smithers.");
                 return;
             }
         }
@@ -55,7 +55,7 @@ var serverHandler = function(request, response, opts, jenkins) {
         var branch = (branchResult != null) ? branchResult[1] : undefined; 
         if (!branch) {
                 response.statusCode = 404;
-                response.end("I'm sorry, there was a problem with finding the branch. Your humble servant, Smithers.");
+                console.error("I'm sorry, there was a problem with finding the branch. Your humble servant, Smithers.");
                 return;
         }
 
@@ -83,33 +83,33 @@ var serverHandler = function(request, response, opts, jenkins) {
                                }
                                ,function(error, data) {
                                     if(!error) {
-                                        response.write("Job copied\n");
+                                        console.log("Job copied");
                                     } else {
                                         response.statusCode = 500;
-                                        response.end("Error copying job, ", error);
+                                        console.error("Error copying job, ", error);
                                         return;
                                     }
 
                                     jenkins.build(jobName, function(error, data) {
                                         if(!error) {
-                                            response.end("Job built\n");
+                                            console.log("Job built\n");
                                             return;
                                         } else {
                                             response.statusCode = 500;
-                                            response.end("Error building, ", error);
+                                            console.error("Error building, ", error);
                                             return;
                                         }
                                     });
                                 });
             } else {
-                if (projectConfig.deleted == true) {
+                if (payload.deleted == true) {
                     jenkins.delete_job(jobName, function(error, data) {
                         if(!error) {
-                            response.end("Job deleted\n");
+                            console.log("Job deleted\n");
                             return;
                         } else {
                             response.statusCode = 500;
-                            response.end("Error deleting, ", error);
+                            console.error("Error deleting, ", error);
                             return;
                         }
                         
@@ -117,18 +117,15 @@ var serverHandler = function(request, response, opts, jenkins) {
                 } else {
                     jenkins.build(jobName, function(error, data) {
                         if(!error) {
-                            response.end("Job built\n");
                             console.log("Job build");
                             return;
                         } else {
                             response.statusCode = 500;
-                            response.end("Error building, ", error);
+                            console.error("Error building, ", error);
                             return;
                         }
                     });
-
                 }
-
             }
         });
 
