@@ -3,7 +3,6 @@ var http       = require('http')
   , jenkinsapi = require('jenkins-api')
   , path       = require('path')
   , fs         = require('fs')
-  , _          = require('underscore');
 
 var serverHandler = function(request, response, opts, jenkins) {
 
@@ -16,7 +15,46 @@ var serverHandler = function(request, response, opts, jenkins) {
         return;
     }
 
+    var body = "";
 
+    request.on('data', function(chunk) {
+        body += chunk;
+    });
+
+    request.on('end', function() {
+
+        // Parse payload from body POST
+        var params = unescape(body).split('&');
+        var payload;
+        for(param in params) {
+            var pair = params[param].split('=');
+            if(pair.length == 2 && pair[0]=="payload") {
+                payload = JSON.parse(pair[1]);
+            }
+        }
+        console.log(payload);
+        // Check if project from Post hook exists in our config file
+        if (payload.repository.name) {
+            var projects = opts.config.projects;
+            var projectConfig;
+            for (project in projects) {
+                if (projects[project].name == payload.repository.name) {
+                    projectConfig = projects[project];
+                    console.log(projectConfig);
+                }
+            }
+            if(projectConfig === undefined) {
+                response.statusCode = 404;
+                response.end("Project not found in configuration");
+                return;
+            }
+        }
+
+
+
+        response.end();
+
+    });
 
 }
 
