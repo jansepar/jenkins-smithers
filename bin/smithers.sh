@@ -14,7 +14,7 @@ d_start()
 
 d_stop()
 {
-    GREP=`ps auxwww | grep smithers.js | grep -v grep | head -1`
+    GREP=`ps auxwww | grep smithers | grep -v grep | head -1`
     if [[ -n $GREP  ]]; then
         PID=`echo $GREP | awk '{ print $2 }'`
             echo "-- Killing server PID: $PID"
