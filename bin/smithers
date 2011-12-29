@@ -1,0 +1,9 @@
+#!/usr/bin/env node
+
+var smithers = require('../lib/smithers')
+  , path = require('path');
+
+var appSourceDir = path.join(__dirname, "..");
+
+//TODO Set up getopts for port, sslPort, and configFile
+smithers.createServer({port: 8880, sslPort: 8843, configFile: path.join(appSourceDir , "config.json")});
