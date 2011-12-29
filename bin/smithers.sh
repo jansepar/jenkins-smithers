@@ -3,7 +3,7 @@
 DESC="Smithers server, assistant to Jenkins"
 NAME=$0
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-SCRIPT_NAME=smithers.js
+SCRIPT_NAME=smithers
 
 echo $DIR
 
